@@ -48,7 +48,7 @@ class RetryServiceImplementation {
                 this.retryOperations.splice(index, 1);
             }
         });
-        return retryOperation;
+        return retryOperation.promise;
     }
 
 }

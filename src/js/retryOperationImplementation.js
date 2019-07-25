@@ -8,7 +8,7 @@ export class RetryOperationImplementation {
       logMessage
     ) {
   
-      this.deferred = new Promise();
+      this.deferred = this.defer();
       this.retryAttempt = -1;
       this.isAborted = false;
       this.isCancelled = false;
@@ -17,7 +17,7 @@ export class RetryOperationImplementation {
       options = options || {};
       this.service = service;
       this.operation = operation;
-      this.operationName = operationName;
+      this.name = operationName;
       this.logMessage = logMessage;
   
       this.delayInMs = options.delayInMs || 1000;
@@ -41,9 +41,19 @@ export class RetryOperationImplementation {
       }
       this.retryOperation();
     }
-  
+    
+    defer() {
+      var deferred = {};
+      var promise = new Promise(function(resolve, reject) {
+          deferred.resolve = resolve;
+          deferred.reject  = reject;
+      });
+      deferred.promise = promise;
+      return deferred;
+    }
+
     get promise() {
-      return this.deferred ? this.deferred : null;
+      return this.deferred ? this.deferred.promise : null;
     }
   
     get cancelled() {
@@ -70,7 +80,7 @@ export class RetryOperationImplementation {
         if (this.timerPromise) {
           this.service.$cancelTimer(this.timerPromise);
         }
-        this.promise.reject(reason || this.service.strings.cancelled);
+        this.deferred.reject(reason || this.service.strings.cancelled);
         return true;
       }
       return false;
@@ -82,10 +92,10 @@ export class RetryOperationImplementation {
   
       this.service.logMessage(`Retrying operation ${this.name}, attempt: ${this.retryAttempt}`);
   
-      this.operation(this.retryScenario).then(result => {
-        if (this.deferred) {
+      this.operation().then(result => {
+        if (this.promise) {
           this.service.logMessage(`Operation ${this.name} succeeded, attempt: ${this.retryAttempt}`);
-          this.promise.resolve(result);
+          this.deferred.resolve(result);
         }
       }, (failure) => {
         if (!this.promise) {
@@ -95,16 +105,16 @@ export class RetryOperationImplementation {
   
         this.service.logMessage(`Operation ${this.name} failed, attempt: ${this.retryAttempt}, error: ${ failure}`);
   
-        if (failure && (failure === this.service.strings.aborted || failure.retryStatus == this.service.aborted)) {
+        if (failure && (failure === this.service.strings.aborted || failure.retryStatus == this.service.strings.aborted)) {
           this.service.logMessage(`Operation ${this.name} requested to abort.`, 'warn');
           this.isAborted = true;
-          this.promise.reject(failure);
+          this.deferred.reject(failure);
           return;
         }
   
         if (!this.forever && this.retryAttempt >= this.numberOfRetrials) {
           this.service.logMessage(`Operation ${this.name} reached max retry attempts, reporting as failed.`, 'warn');
-          this.promise.reject(failure);
+          this.deferred.reject(failure);
         } else {
           let exponentialNumber = Math.min(this.retryAttempt, this.numberOfRetrials);
           let interval = ( this.isExponential ? Math.pow(2, exponentialNumber) : 1 ) * this.delayInMs;

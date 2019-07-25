@@ -1,15 +1,3 @@
 <html>  
-    <script type="module" src="./../js/RedSkull.js"></script>
-    <script type="text/javascript">
-        var opration =  () => {
-            return fetch('/dummy.json');
-        }
-        opration.then(function(response) {
-            return response.json();
-        })
-        .then(function(jsonResponse) {
-            let response  = JSON.stringify(jsonResponse.value);
-            console.log();
-        }); 
-    </script>
+<script type="module" src="./../js/callerService.js"></script>
 </html>
