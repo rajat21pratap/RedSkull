@@ -1,0 +1,32 @@
+{  
+    "type":"Microsoft.SkypeSpaces.MiddleTier.Models.IUserIdentity",
+    "value":[  
+       {  
+          "userPrincipalName":"rhalbert@microsoft.com",
+          "givenName":"Rich",
+          "surname":"Halbert",
+          "jobTitle":"PRINCIPAL PM",
+          "userLocation":"LINCOLN SQUARE/10210",
+          "email":"rhalbert@microsoft.com",
+          "isShortProfile":true,
+          "displayName":"Rich Halbert",
+          "mri":"8:orgid:6465d006-8d3b-47dc-b9a8-5a0a862b115a",
+          "objectId":"6465d006-8d3b-47dc-b9a8-5a0a862b115a",
+          "type":"ADUser"
+       },
+       {  
+          "userPrincipalName":"suryap@microsoft.com",
+          "givenName":"Surya",
+          "surname":"Appini",
+          "jobTitle":"SOFTWARE ENGINEER 2",
+          "userLocation":"LINCOLN SQUARE/14012",
+          "email":"suryap@microsoft.com",
+          "userType":"Member",
+          "isShortProfile":true,
+          "displayName":"Surya Appini",
+          "mri":"8:orgid:c3d86c2c-2e1e-4445-b1d0-8a966e919691",
+          "objectId":"c3d86c2c-2e1e-4445-b1d0-8a966e919691",
+          "type":"ADUser"
+       }
+    ]
+ }

@@ -1,5 +1,5 @@
 "user stict";
-import { RetryOperationImplementation } from './retryOperationImplementation';
+import { RetryOperationImplementation } from './retryOperationImplementation.js';
 
 class RetryServiceImplementation {
 
@@ -53,5 +53,6 @@ class RetryServiceImplementation {
 
 }
 
-export const RetryService = ( new RetryServiceImplementation() );
+const RetryService = ( new RetryServiceImplementation() );
+export default RetryService;
 
