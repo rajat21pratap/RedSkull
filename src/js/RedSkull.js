@@ -1,4 +1,6 @@
  import CircuitBreaker from "./circuit-breaker.js";
+ import RetryService from './RetryService.js';
+
  class RedSkull {
     circuiBreakerInstanceMap = new Map();
     constructor () {
@@ -29,4 +31,6 @@
 
 const instance = new RedSkull();
 Object.freeze(instance);
-export default instance;
+
+export const CircuitBreakerInstance = instance;
+export const RetryServiceInstance = RetryService;
