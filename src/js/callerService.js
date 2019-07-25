@@ -2,9 +2,7 @@ import instance from "./RedSkull.js"
 (function() {
 
 function operation(){
-    return new Promise((res, rej) => {
-        
-    })
+    return fetch("http://jsonplaceholder.typicode.com/todos/1");
 }
 
 })();
