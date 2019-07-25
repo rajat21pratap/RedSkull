@@ -6,16 +6,6 @@ class CircuitBreaker {
         HALF_OPEN: 1,
         CLOSE: 2
     }
-
-    defaultConfig = 
-            {
-                initialDelay: 100, 
-                intervalWindow: 10, 
-                thresholdCount: 10, 
-                maxDelay: 60,
-                promiseTimeout: 5 
-            }
-
     baseFactor = 2;
     circuitState = this.state.CLOSE;
     thresholdInterval = undefined;
@@ -24,7 +14,14 @@ class CircuitBreaker {
     attempt = 0;
     lastCallTimeStamp = undefined;
     subsequentRequestMaxTimeDiff = 2 * 60 * 60 * 1000;
-    
+    config = {
+            initialDelay: 100, 
+            intervalWindow: 3 * 60 * 1000, 
+            thresholdCount: 5, 
+            maxDelay: 60 * 1000,
+            promiseTimeout: 5 * 1000,
+            exponentialBackoff: true
+        };
 
     constructor() {}
 
@@ -40,25 +37,25 @@ class CircuitBreaker {
         operation,
         config
     ) {
-        config = config || this.defaultConfig;
+        this.config = config || this.config;
         let currentRequestTime = Date.now();
-        if (this.lastCallTimeStamp && (currentRequestTime - this.lastCallTimeStamp > subsequentRequestMaxTimeDiff)) {
-            reset();
+        if (this.lastCallTimeStamp && (currentRequestTime - this.lastCallTimeStamp > this.subsequentRequestMaxTimeDiff)) {
+            this.reset();
         }
         this.lastCallTimeStamp = Date.now();
         switch (this.circuitState) {
             case this.state.CLOSE :
-            if (config && !this.thresholdInterval) {
-                this.thresholdInterval = this.startOperationHealthTicker(config.intervalWindow, config.thresholdCount);
+            if (this.config && !this.thresholdInterval) {
+                this.thresholdInterval = this.startOperationHealthTicker(this.config.intervalWindow, this.config.thresholdCount);
             }
-            return this.executeOperation(operation, config);
+            return this.executeOperation(operation);
             break;
 
             case this.state.HALF_OPEN:
             if (this.isHalfOpenRequestPending) {
                 return Promise.reject("rejected: API down");
             }
-             return this.executeOperation(operation, config);
+             return this.executeOperation(operation);
             break;
 
             case this.state.OPEN:
@@ -67,17 +64,18 @@ class CircuitBreaker {
         }
     }
 
-    executeOperation (operation, config) {
+    executeOperation (operation) {
         if (this.circuitState === this.state.HALF_OPEN) {
             this.isHalfOpenRequestPending = true;
         }
 
-        return getPromiseWithTimeout(operation, this.config.promiseTimeout, "time_out").then((response) => {
-            if (circuitState === this.state.HALF_OPEN) {
-                reset();
+        return getPromiseWithTimeout(operation(), this.config.promiseTimeout, "time_out").then((response) => {
+            if (this.circuitState === this.state.HALF_OPEN) {
+                this.reset();
             }
             return response;
         }).catch(error => {
+           this.isHalfOpenRequestPending = false;
            this.handleOnOperationError();
            throw error;
         });
@@ -87,13 +85,12 @@ class CircuitBreaker {
         this.errorsInInterval++;
         if (this.circuitState === this.state.CLOSE && this.errorsInInterval >= this.config.thresholdCount) {
             this.circuitState = this.state.OPEN;
+            this.backOffTimeoutHandler = this.startBackOffTimer();
         }
         if (this.circuitState === this.state.HALF_OPEN) {
-            this.attempt++;
             this.circuitState = this.state.OPEN;
+            this.backOffTimeoutHandler = this.startBackOffTimer();
         }
-
-        this.backOffTimeoutHandler = this.startBackOffTimer();
     }
 
     startOperationHealthTicker (
@@ -106,7 +103,8 @@ class CircuitBreaker {
 
     startBackOffTimer () {
         if (this.config.exponentialBackoff) {
-            let timer = Math.min(this.config.initialDelay * Math.pow(baseFactor, attempt - 1), this.config.maxDelay);
+            this.attempt++;
+            let timer = Math.min(this.config.initialDelay * Math.pow(this.baseFactor, this.attempt - 1), this.config.maxDelay);
             return setTimeout(() => {
                 this.circuitState = this.state.HALF_OPEN;
             },
@@ -122,8 +120,4 @@ class CircuitBreaker {
         this.isHalfOpenRequestPending = false;
     }
 }
-
-
-//const singletonInstance = new CircuitBreaker();
-//Object.freeze(singletonInstance);
 export default CircuitBreaker;

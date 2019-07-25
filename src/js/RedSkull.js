@@ -21,7 +21,7 @@
         let currInstance = this.circuiBreakerInstanceMap.get(operationName);
         if (!currInstance) {
             currInstance = new CircuitBreaker(config);
-            this.circuiBreakerInstanceMap.set(operationName, operation);
+            this.circuiBreakerInstanceMap.set(operationName, currInstance);
         }
         return currInstance.run(operation);
     }
