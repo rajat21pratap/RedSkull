@@ -27,10 +27,14 @@
         }
         return currInstance.run(operation);
     }
+
+    retry (...params) {
+      return RetryService.retry(...params);
+    }
 }
 
 const instance = new RedSkull();
 Object.freeze(instance);
 
-export const CircuitBreakerInstance = instance;
-export const RetryServiceInstance = RetryService;
+window.redSkull = instance;
+export const RedSkull = instance;
